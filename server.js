@@ -1,7 +1,6 @@
 const express = require('express');
 const app = express();
 const Razorpay = require('razorpay');
-const path = require('path');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
@@ -13,18 +12,27 @@ const razorpay = new Razorpay({
 });
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: ['https://fascinating-tulumba-75c61f.netlify.app/'], // ✅ Allow your frontend URL
+  credentials: true
+}));
 app.use(express.json());
 
-// Serve static files from 'frontend' folder (adjusted to be at the same level as 'backend')
-app.use(express.static(path.join(__dirname, '../frontend')));
+// --- REMOVE or COMMENT these lines ---
+// app.use(express.static(path.join(__dirname, '../frontend')));
+// app.get('/', (req, res) => {
+//     res.sendFile(path.join(__dirname, '../frontend', 'place-order.html'));
+// });
+// app.get('/success', (req, res) => {
+//     res.sendFile(path.join(__dirname, '../frontend', 'success.html'));
+// });
 
-// Routes
+// ✅ Add a simple Home Route (Optional, for testing)
 app.get('/', (req, res) => {
-    // Serve the place-order.html from the 'frontend' folder
-    res.sendFile(path.join(__dirname, '../frontend', 'place-order.html'));
+    res.send('Backend API is Running Successfully ✅');
 });
 
+// Create Razorpay Order
 app.post('/create-order', async (req, res) => {
     const { amount } = req.body;
     try {
@@ -78,7 +86,7 @@ async function sendEmail(orderDetails) {
     }
 }
 
-// Payment success route
+// Payment Success
 app.post('/success', (req, res) => {
     console.log('Received order details:', req.body);
 
@@ -98,13 +106,8 @@ app.post('/success', (req, res) => {
         });
 });
 
-app.get('/success', (req, res) => {
-    // Serve success.html from the 'frontend' folder
-    res.sendFile(path.join(__dirname, '../frontend', 'success.html'));
-});
-
 // Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });
