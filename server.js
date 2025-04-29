@@ -13,42 +13,43 @@ const razorpay = new Razorpay({
 
 // Middleware
 app.use(cors({
-  origin: ['https://fascinating-tulumba-75c61f.netlify.app'], // ✅ Allow your frontend URL
+  origin: ['https://fascinating-tulumba-75c61f.netlify.app'],
   credentials: true
 }));
 app.use(express.json());
 
-// --- REMOVE or COMMENT these lines ---
-// app.use(express.static(path.join(__dirname, '../frontend')));
-// app.get('/', (req, res) => {
-//     res.sendFile(path.join(__dirname, '../frontend', 'place-order.html'));
-// });
-// app.get('/success', (req, res) => {
-//     res.sendFile(path.join(__dirname, '../frontend', 'success.html'));
-// });
-
-// ✅ Add a simple Home Route (Optional, for testing)
+// ✅ Test route
 app.get('/', (req, res) => {
     res.send('Backend API is Running Successfully ✅');
 });
 
-// Create Razorpay Order
+// ✅ Create Razorpay Order
 app.post('/create-order', async (req, res) => {
     const { amount } = req.body;
+    console.log('Received amount for order:', amount);
+
+    // Validate amount
+    if (!amount || typeof amount !== 'number' || amount <= 0) {
+        return res.status(400).json({ error: 'Invalid or missing amount in request body' });
+    }
+
     try {
         const order = await razorpay.orders.create({
-            amount: amount,
+            amount: amount, // Must be in paise
             currency: "INR",
-            receipt: "receipt_order_" + Math.floor(Math.random() * 100)
+            receipt: "receipt_order_" + Math.floor(Math.random() * 1000000)
         });
         res.json(order);
     } catch (err) {
         console.error('Error creating order:', err);
-        res.status(500).send('Error creating order');
+        res.status(500).json({
+            error: 'Error creating Razorpay order',
+            details: err.message
+        });
     }
 });
 
-// Email sending function using Nodemailer
+// ✅ Email sending function
 async function sendEmail(orderDetails) {
     const transporter = nodemailer.createTransport({
         service: 'gmail',
@@ -86,8 +87,8 @@ async function sendEmail(orderDetails) {
     }
 }
 
-// Payment Success
-let processedOrders = new Set();  // Store processed Order IDs temporarily
+// ✅ Payment success route
+let processedOrders = new Set();
 
 app.post('/success', (req, res) => {
     console.log('Received order details:', req.body);
@@ -100,16 +101,13 @@ app.post('/success', (req, res) => {
 
     const uniqueOrderId = `${orderDetails.customer.phone}-${orderDetails.totalPrice}`;
 
-    // Check if this order already processed
     if (processedOrders.has(uniqueOrderId)) {
         console.log('Duplicate order detected, ignoring...');
         return res.status(200).json({ message: 'Duplicate order ignored' });
     }
 
-    // Mark this order as processed
     processedOrders.add(uniqueOrderId);
 
-    // Send the email
     sendEmail(orderDetails)
         .then(() => {
             res.status(200).json({ message: 'Order email sent successfully' });
@@ -120,8 +118,7 @@ app.post('/success', (req, res) => {
         });
 });
 
-
-// Start server
+// ✅ Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
