@@ -87,6 +87,8 @@ async function sendEmail(orderDetails) {
 }
 
 // Payment Success
+let processedOrders = new Set();  // Store processed Order IDs temporarily
+
 app.post('/success', (req, res) => {
     console.log('Received order details:', req.body);
 
@@ -96,19 +98,26 @@ app.post('/success', (req, res) => {
         return res.status(400).json({ message: 'Order details are missing' });
     }
 
-    // Avoid sending duplicate email if already Paid
-    if (orderDetails.paymentStatus === 'Paid' || paymentMethod === 'cod') {
-        sendEmail(orderDetails)
-            .then(() => {
-                res.status(200).json({ message: 'Order email sent successfully' });
-            })
-            .catch(err => {
-                console.error('Error sending email:', err);
-                res.status(500).json({ message: 'Error sending email' });
-            });
-    } else {
-        res.status(200).json({ message: 'Payment incomplete, no email sent' });
+    const uniqueOrderId = `${orderDetails.customer.phone}-${orderDetails.totalPrice}`;
+
+    // Check if this order already processed
+    if (processedOrders.has(uniqueOrderId)) {
+        console.log('Duplicate order detected, ignoring...');
+        return res.status(200).json({ message: 'Duplicate order ignored' });
     }
+
+    // Mark this order as processed
+    processedOrders.add(uniqueOrderId);
+
+    // Send the email
+    sendEmail(orderDetails)
+        .then(() => {
+            res.status(200).json({ message: 'Order email sent successfully' });
+        })
+        .catch(err => {
+            console.error('Error sending email:', err);
+            res.status(500).json({ message: 'Error sending email' });
+        });
 });
 
 
