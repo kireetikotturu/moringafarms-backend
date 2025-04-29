@@ -13,7 +13,7 @@ const razorpay = new Razorpay({
 
 // Middleware
 app.use(cors({
-  origin: ['https://fascinating-tulumba-75c61f.netlify.app/'], // ✅ Allow your frontend URL
+  origin: ['https://fascinating-tulumba-75c61f.netlify.app'], // ✅ Allow your frontend URL
   credentials: true
 }));
 app.use(express.json());
