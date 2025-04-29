@@ -90,21 +90,27 @@ async function sendEmail(orderDetails) {
 app.post('/success', (req, res) => {
     console.log('Received order details:', req.body);
 
-    const { orderDetails } = req.body;
+    const { orderDetails, paymentMethod } = req.body;
 
     if (!orderDetails) {
         return res.status(400).json({ message: 'Order details are missing' });
     }
 
-    sendEmail(orderDetails)
-        .then(() => {
-            res.status(200).json({ message: 'Order details sent successfully' });
-        })
-        .catch(err => {
-            console.error('Error sending email:', err);
-            res.status(500).json({ message: 'Error sending email' });
-        });
+    // Avoid sending duplicate email if already Paid
+    if (orderDetails.paymentStatus === 'Paid' || paymentMethod === 'cod') {
+        sendEmail(orderDetails)
+            .then(() => {
+                res.status(200).json({ message: 'Order email sent successfully' });
+            })
+            .catch(err => {
+                console.error('Error sending email:', err);
+                res.status(500).json({ message: 'Error sending email' });
+            });
+    } else {
+        res.status(200).json({ message: 'Payment incomplete, no email sent' });
+    }
 });
+
 
 // Start server
 const PORT = process.env.PORT || 3000;
