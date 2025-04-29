@@ -7,8 +7,8 @@ require('dotenv').config();
 
 // Razorpay instance
 const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_v48Xg7GtP96NU1',
-    key_secret: process.env.RAZORPAY_SECRET_KEY || 'I2oMcNmpOkgTwl1tq9WYDXuR'
+    key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_WudjubkREr0jzx',
+    key_secret: process.env.RAZORPAY_SECRET_KEY || 'J3TON1JqTaEcomqp6zXovYIW'
 });
 
 // Middleware
